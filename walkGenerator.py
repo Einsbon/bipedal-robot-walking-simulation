@@ -1,5 +1,5 @@
 '''
-This code functions as walking point creation and inverse kinematics.
+This code functions as gait point generation and inverse kinematics.
 
 by Einsbon (Sunbin Kim)
 - GitHub: https://github.com/Einsbon
