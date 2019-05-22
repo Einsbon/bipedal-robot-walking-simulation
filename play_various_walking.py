@@ -29,15 +29,15 @@ fixedTimeStep = 1./1000
 numSolverIterations = 200
 
 physicsClient = p.connect(p.GUI)
-p.setTimeStep(fixedTimeStep)
+p.setTimeStep(timeStep=fixedTimeStep, physicsClientId=physicsClient)
 p.setPhysicsEngineParameter(numSolverIterations=numSolverIterations)
-p.setAdditionalSearchPath(pybullet_data.getDataPath())  # to load plane.urdf
+p.setAdditionalSearchPath(pybullet_data.getDataPath())  # to load ground
 
 p.setGravity(0, 0, 0)
-p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=10, cameraPitch=-5, cameraTargetPosition=[0.3, 0.5, 0.1])
+p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=10, cameraPitch=-5, cameraTargetPosition=[0.3, 0.5, 0.1],physicsClientId=physicsClient)
 
-# samurai.urdf  plane.urdf
-planeId = p.loadSDF('stadium.sdf')
+
+planeId = p.loadSDF('stadium.sdf') # or p.loadURDF('samurai.urdf')  # p.loadURDF('plane.urdf')
 
 robot = p.loadURDF(os.path.abspath(os.path.dirname(__file__))+'/humanoid_leg_12dof.7.urdf', [0, 0, 0.05],
                    p.getQuaternionFromEuler([0, 0, 0]), useFixedBase=False)
@@ -46,8 +46,8 @@ controller = motorController.MotorController(
     robot, physicsClient, fixedTimeStep, motor_kp, motor_kd, motor_torque, motor_max_velocity)
 
 walk = walkGenerator.WalkGenerator()
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=50, l=90, sit=40, swayBody=45, swayFoot=0,
-                      bodyPositionXPlus=5, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=90, sit=40, swayBody=45, swayFoot=0,
+                      bodyPositionForwardPlus=5, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 
@@ -90,8 +90,8 @@ for _ in range(repeatTime):
 
 ########################################################
 p.resetBasePositionAndOrientation(robot,  [0, 0, 0], p.getQuaternionFromEuler([0, 0, 0]))
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=50, l=90, sit=70, swayBody=45, swayFoot=0,
-                      bodyPositionXPlus=5, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=90, sit=70, swayBody=45, swayFoot=0,
+                      bodyPositionForwardPlus=5, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
@@ -124,8 +124,8 @@ for _ in range(repeatTime):
 ########################################################
 p.resetBasePositionAndOrientation(robot,  [0, 0, 0], p.getQuaternionFromEuler([0, 0, 0]))
 
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=20, l=40, sit=40, swayBody=30, swayFoot=0,
-                      bodyPositionXPlus=5, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.03, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=20, stride=40, sit=40, swayBody=30, swayFoot=0,
+                      bodyPositionForwardPlus=5, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.03, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
@@ -155,8 +155,8 @@ for _ in range(repeatTime):
 ########################################################
 p.resetBasePositionAndOrientation(robot,  [0, 0, 0], p.getQuaternionFromEuler([0, 0, 0]))
 
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=50, l=140, sit=40, swayBody=50, swayFoot=0,
-                      bodyPositionXPlus=-2, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.12, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=140, sit=40, swayBody=50, swayFoot=0,
+                      bodyPositionForwardPlus=-2, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.12, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
@@ -188,8 +188,8 @@ for _ in range(repeatTime):
 ########################################################
 p.resetBasePositionAndOrientation(robot,  [0, 0, 0], p.getQuaternionFromEuler([0, 0, 0]))
 
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=40, l=70, sit=40, swayBody=45, swayFoot=0,
-                      bodyPositionXPlus=-40, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=40, stride=70, sit=40, swayBody=45, swayFoot=0,
+                      bodyPositionForwardPlus=-40, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
@@ -218,8 +218,8 @@ for _ in range(repeatTime):
 ########################################################
 p.resetBasePositionAndOrientation(robot,  [0, 0, 0.], p.getQuaternionFromEuler([0, 0, 0]))
 
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=50, l=-90, sit=40, swayBody=45, swayFoot=0,
-                      bodyPositionXPlus=0, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=-90, sit=40, swayBody=45, swayFoot=0,
+                      bodyPositionForwardPlus=0, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
@@ -249,8 +249,8 @@ for _ in range(repeatTime):
 ########################################################
 p.resetBasePositionAndOrientation(robot,  [0, 0, 0], p.getQuaternionFromEuler([0, 0, 0]))
 
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=50, l=0, sit=40, swayBody=45, swayFoot=0,
-                      bodyPositionXPlus=5, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=0, sit=40, swayBody=45, swayFoot=0,
+                      bodyPositionForwardPlus=5, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
@@ -284,8 +284,8 @@ for _ in range(repeatTime):
 ########################################################
 p.resetBasePositionAndOrientation(robot,  [0, 0, 0.0], p.getQuaternionFromEuler([0, 0, 0]))
 
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=50, l=90, sit=40, swayBody=35, swayFoot=0,
-                      bodyPositionXPlus=5, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=90, sit=40, swayBody=35, swayFoot=0,
+                      bodyPositionForwardPlus=5, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.06, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
@@ -328,8 +328,8 @@ for i in range(p.getNumJoints(giantRobot)):
 
 controller2 = motorController.MotorController(
     giantRobot, physicsClient, fixedTimeStep, motor_kp, motor_kd, 50, motor_max_velocity)
-walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, h=50, l=90, sit=30, swayBody=35, swayFoot=0,
-                      bodyPositionXPlus=5, swayShift=3, weightStart=0.4, weightEnd=0.6, stepTime=0.08, damping=0.0, incline=0.0)
+walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=90, sit=30, swayBody=35, swayFoot=0,
+                      bodyPositionForwardPlus=5, swayShift=3, smoothStart=0.4, smoothEnd=0.6, stepTime=0.08, damping=0.0, incline=0.0)
 walk.generate()
 walk.inverseKinematicsAll()
 actionTime = walk._stepTime
