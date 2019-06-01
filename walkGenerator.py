@@ -20,15 +20,14 @@ import math
 
 class WalkGenerator():
     def __init__(self):
-        #                      R 0   1   2   3   4   5  L6   7   8   9  10  11
-        self._motorDirection = [+1, +1, +1, +1, +1, +1, +1, -1, -1, +1, -1, -1]
+        #                                      0   1   2   3   4   5 
         self._motorDirectionRight = np.array([+1, +1, +1, +1, +1, +1])
         self._motorDirectionLeft = np.array([+1, +1, +1, +1, +1, +1])
         '''
-        self._walkPoint0 = 0
-        self._walkPoint1 = 0
-        self._walkPoint2 = 0
-        self._walkPoint3 = 0
+        self._walkPoint0 = 0  # double support. point of the landed foot
+        self._walkPoint1 = 0  # single support. point of the supporting foot
+        self._walkPoint2 = 0  # double support. point of the foot to lift.
+        self._walkPoint3 = 0  # single support. point of the swinging foot
         '''
         '''
         self.walkPointStartRightstepRightLeg = 0  # 오른쪽 발을 먼저 내밈. 그때의 오른쪽 발.
@@ -41,27 +40,19 @@ class WalkGenerator():
         self.walkPointEndLeftstepRightLeg = 0  # 오른쪽 발을 디디면서 끝남. 그때의 왼쪽 발.
         self.walkPointEndLeftstepLeftLeg = 0
         self.walkPointEndRightstepLeftLeg = 0
-        # self._walkPoint1fInverse = 0
-        # self._walkPoint2fInverse = 0
-
+        
         self.walkPointRightStepRightLeg = 0
         self.walkPointLeftStepRightLeg = 0
 
         self.walkPointRightStepLeftLeg = 0
         self.walkPointLeftStepLeftLeg = 0
 
-        self.walkPointRightStepInverse = 0
-        self.walkPointLeftStepInverse = 0
-
-        self.walkPointStartRightInverse = 0  # 왼쪽으로 sway 했다가 오른발을 먼저 내밈.
-        self.walkPointStartLeftInverse = 0  # 오른쪽으로 sway 했다가 왼발을 먼저 내밈.
-        self.walkPointEndRightInverse = 0  # 오른발을 디디면서 끝남.
-        self.walkPointEndLeftInverse = 0  # 왼발을 디디면서 끝남.
-
-        self._walkPoint0AnkleX = 0
-        self._walkPoint1AnkleX = 0
-        self._walkPoint2AnkleX = 0
-        self._walkPoint3AnkleX = 0
+        self.walkAnglesWalkingRight = 0
+        self.walkAnglesWalkingLeft = 0
+        self.walkAnglesStartRight = 0  # 왼쪽으로 sway 했다가 오른발을 먼저 내밈.
+        self.walkAnglesStartLeft = 0  # 오른쪽으로 sway 했다가 왼발을 먼저 내밈.
+        self.walkAnglesEndRight = 0  # 오른발을 디디면서 끝남.
+        self.walkAnglesEndLeft = 0  # 왼발을 디디면서 끝남.
 
         self.turnListUnfold = 0
         self.turnListFold = 0
@@ -80,8 +71,8 @@ class WalkGenerator():
         self._swayBody = 0
         self._swayFoot = 0
         self._swayShift = 0
-        self._weightStart = 0
-        self._weightEnd = 0
+        self._liftPush = 0
+        self._landPull = 0
         self._stepTime = 0
         self._bodyPositionXPlus = 0
         self._damping = 0
@@ -91,7 +82,7 @@ class WalkGenerator():
     def setRobotParameter(self, pelvic_interval, leg_up_length, leg_down_length, foot_to_grount, foot_to_heel, foot_to_toe):
         pass
 
-    def setWalkParameter(self, bodyMovePoint, legMovePoint, height, stride, sit, swayBody, swayFoot, bodyPositionForwardPlus, swayShift, smoothStart=0.4, smoothEnd=0.6, stepTime=0.1, damping=0, incline=0):
+    def setWalkParameter(self, bodyMovePoint, legMovePoint, height, stride, sit, swayBody, swayFoot, bodyPositionForwardPlus, swayShift, liftPush=0.4, landPull=0.6, timeStep=0.1, damping=0, incline=0):
         self._bodyMovePoint = bodyMovePoint # the number of point when two feet are landed
         self._legMovePoint = legMovePoint   # the number of point when lift one foot
         self._h = height                    # foot lift height
@@ -100,9 +91,9 @@ class WalkGenerator():
         self._swayBody = swayBody           # body sway length
         self._swayFoot = swayFoot           # foot sway length. 0 -> feet move straight forward. plus this make floating leg spread.(increase gap between feet)
         self._swayShift = swayShift         # start point of sway
-        self._weightStart = smoothStart     # smoothes the motion when lift a foot
-        self._weightEnd = smoothEnd         # smoothes the motion when put a foot
-        self._stepTime = stepTime
+        self._liftPush = liftPush        # push the lifting foot backward when lifting the foot to gains momentum.
+        self._landPull = landPull          # Before put the foot down, go forward more and pull back when landing.
+        self._timeStep = timeStep           # simulation timeStep
         self._bodyPositionXPlus = bodyPositionForwardPlus  # plus this makes the body forward
         self._damping = damping             # damping at the start and end of foot lift.
         self._incline = incline             # tangent angle of incline
@@ -146,7 +137,7 @@ class WalkGenerator():
             t = (i + 1) / self._legMovePoint
             sin_tpi = math.sin(t * math.pi)
 
-            walkPoint3[0][i] = (2 * t - 1 + (1 - t) * self._weightStart * -sin_tpi + t * self._weightEnd * sin_tpi) * trajectoryLength / 2
+            walkPoint3[0][i] = (2 * t - 1 + (1 - t) * self._liftPush * -sin_tpi + t * self._landPull * sin_tpi) * trajectoryLength / 2
             walkPoint3[2][i] = math.sin(t * math.pi) * self._h + self._sit
             walkPoint3[1][i] = math.sin(t * math.pi) * self._swayFoot + self._swayBody * math.sin(2 * math.pi * ((i + 1 + walkPoint - self._legMovePoint - self._swayShift) / walkPoint))
 
@@ -165,7 +156,7 @@ class WalkGenerator():
             sin_tpi = math.sin(t * math.pi)
 
             self.walkPointStartRightstepRightLeg[2][i + self._bodyMovePoint - self._swayShift] = math.sin(t * math.pi) * self._h + self._sit
-            self.walkPointStartRightstepRightLeg[0][i + self._bodyMovePoint - self._swayShift] = (2 * t + (1 - t) * self._weightStart * -sin_tpi + t * self._weightEnd * sin_tpi) * trajectoryLength / 4
+            self.walkPointStartRightstepRightLeg[0][i + self._bodyMovePoint - self._swayShift] = (2 * t + (1 - t) * self._liftPush * -sin_tpi + t * self._landPull * sin_tpi) * trajectoryLength / 4
             self.walkPointStartLeftstepRightLeg[0][i + self._bodyMovePoint - self._swayShift] = (math.cos(t2 * math.pi / 2) - 1) * trajectoryLength * self._legMovePoint / (self._bodyMovePoint * 2 + self._legMovePoint) / 2
             self.walkPointStartLeftstepRightLeg[0][i + self._bodyMovePoint - self._swayShift] = (math.cos(t2 * math.pi / 2) - 1) * trajectoryLength * ((self._swayShift + self._bodyMovePoint + self._legMovePoint) / (self._bodyMovePoint * 2 + self._legMovePoint) - 0.5)
 
@@ -207,7 +198,7 @@ class WalkGenerator():
             self.walkPointEndLeftstepRightLeg[0][i + self._bodyMovePoint - self._swayShift] = (math.sin(t * math.pi / 2) - 1) * trajectoryLength * ((self._bodyMovePoint) / (self._bodyMovePoint * 2 + self._legMovePoint) - 0.5)
             self.walkPointEndLeftstepRightLeg[2][i + self._bodyMovePoint - self._swayShift] = self._sit
 
-            self.walkPointEndRightstepRightLeg[0][i + self._bodyMovePoint - self._swayShift] = (2 * t - 2 + (1 - t) * self._weightStart * -sin_tpi + t * self._weightEnd * sin_tpi) * trajectoryLength / 4
+            self.walkPointEndRightstepRightLeg[0][i + self._bodyMovePoint - self._swayShift] = (2 * t - 2 + (1 - t) * self._liftPush * -sin_tpi + t * self._landPull * sin_tpi) * trajectoryLength / 4
             self.walkPointEndRightstepRightLeg[2][i + self._bodyMovePoint - self._swayShift] = math.sin(t * math.pi) * self._h + self._sit
         for i in range(self._swayShift):
             self.walkPointEndLeftstepRightLeg[0][i + self._bodyMovePoint + self._legMovePoint - self._swayShift] = 0
@@ -286,6 +277,7 @@ class WalkGenerator():
         self.walkPointEndRightstepLeftLeg = self.walkPointEndLeftstepRightLeg * np.array([[1], [-1], [1]])
 
     def inverseKinematicsPoint(self, pointRight, pointLeft):
+        # point list to angle list.
         l3 = self._legUp_length
         l4 = self._legDown_length
 
@@ -416,24 +408,24 @@ class WalkGenerator():
         plt.show()
 
     def inverseKinematicsAll(self):
-        self.walkPointStartRightInverse = np.column_stack(
+        self.walkAnglesStartRight = np.column_stack(
             [self.inverseKinematicsList(self.walkPointStartRightstepRightLeg, True),
              self.inverseKinematicsList(self.walkPointStartRightstepLeftLeg, False)])
-        self.walkPointStartLeftInverse = np.column_stack(
+        self.walkAnglesStartLeft = np.column_stack(
             [self.inverseKinematicsList(self.walkPointStartLeftstepRightLeg, True),
              self.inverseKinematicsList(self.walkPointStartLeftstepLeftLeg, False)])
 
-        self.walkPointEndLeftInverse = np.column_stack(
+        self.walkAnglesEndLeft = np.column_stack(
             [self.inverseKinematicsList(self.walkPointEndLeftstepRightLeg, True),
              self.inverseKinematicsList(self.walkPointEndLeftstepLeftLeg, False)])
-        self.walkPointEndRightInverse = np.column_stack(
+        self.walkAnglesEndRight = np.column_stack(
             [self.inverseKinematicsList(self.walkPointEndRightstepRightLeg, True),
              self.inverseKinematicsList(self.walkPointEndRightstepLeftLeg, False)])
-        # self.walkPointStartLeftInverse = walkpointstartLeft_inverse
-        self.walkPointRightStepInverse = np.column_stack(
+             
+        self.walkAnglesWalkingRight = np.column_stack(
             [self.inverseKinematicsList(self.walkPointRightStepRightLeg, True),
              self.inverseKinematicsList(self.walkPointRightStepLeftLeg, False)])
-        self.walkPointLeftStepInverse = np.column_stack(
+        self.walkAnglesWalkingLeft = np.column_stack(
             [self.inverseKinematicsList(self.walkPointLeftStepRightLeg, True),
              self.inverseKinematicsList(self.walkPointLeftStepLeftLeg, False)])
 
@@ -441,7 +433,7 @@ class WalkGenerator():
 def main():
     walk = WalkGenerator()
     walk.setWalkParameter(bodyMovePoint=8, legMovePoint=8, height=50, stride=80, sit=30, swayBody=60, swayFoot=0,
-                          bodyPositionForwardPlus=0, swayShift=6, smoothStart=0.4, smoothEnd=0.7, stepTime=0.06, damping=0.0, incline=0.0)
+                          bodyPositionForwardPlus=0, swayShift=5, liftPush=0.4, landPull=0.7, timeStep=0.06, damping=0.0, incline=0.0)
     walk.generate()
     walk.showGaitPoint2D()
     walk.showGaitPoint2DTop()
